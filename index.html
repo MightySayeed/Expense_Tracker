@@ -304,7 +304,10 @@
             totalBalanceElement.className = 'summary-amount'; // Reset class
             if (totalBalance > 0) totalBalanceElement.classList.add('positive');
             if (totalBalance < 0) totalBalanceElement.classList.add('negative');
+        } else {
+             console.error("Element with ID 'total-balance' not found!"); // Added error log
         }
+
 
         // Render People Lists
         renderPeopleList('homepage-people-list');
@@ -321,7 +324,7 @@
     // Helper to update expense person dropdown options
     function updateExpensePersonDropdown() {
         const select = document.getElementById('expense-person');
-         if (!select) return;
+         if (!select) return; // Silently return if dropdown not found (e.g., element removed)
 
         // Remember the currently selected value if any
         const selectedValue = select.value;
@@ -344,7 +347,11 @@
     // Helper function to render people list
     function renderPeopleList(listId) {
         const listElement = document.getElementById(listId);
-        if (!listElement) return;
+        if (!listElement) {
+             console.error(`Element with ID '${listId}' not found!`); // Added error log
+             return;
+        }
+
 
         listElement.innerHTML = ''; // Clear previous list
 
@@ -376,7 +383,11 @@
     // Helper function to render transaction list
     function renderTransactionList(listId, transactions) {
         const listElement = document.getElementById(listId);
-        if (!listElement) return;
+         if (!listElement) {
+             console.error(`Element with ID '${listId}' not found!`); // Added error log
+             return;
+         }
+
 
         listElement.innerHTML = ''; // Clear previous list
 
@@ -398,7 +409,14 @@
 
             const dateEl = document.createElement('div');
             dateEl.className = 'transaction-date';
-            dateEl.textContent = new Date(t.date).toLocaleDateString('en-GB'); // dd/mm/yyyy format
+            // Add check for valid date before formatting
+            try {
+                dateEl.textContent = new Date(t.date).toLocaleDateString('en-GB'); // dd/mm/yyyy format
+            } catch (e) {
+                 console.error("Error formatting date:", t.date, e);
+                 dateEl.textContent = "Invalid Date";
+            }
+
 
             infoDiv.appendChild(personEl);
             infoDiv.appendChild(dateEl);
