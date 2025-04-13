@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Money Tracker | Sayeed M Mobtasim</title>
+    <style>
+        :root {
+            --primary: #5e35b1;
+            --primary-light: #9162e4;
+            --primary-dark: #280680;
+            --secondary: #26a69a;
+            --background: #f5f5f5;
+            --surface: #ffffff;
+            --error: #d32f2f;
+            --on-primary: #ffffff;
+            --on-secondary: #000000;
+            --on-surface: #212121;
+            --on-error: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--on-surface);
+            line-height: 1.6;
+            padding-bottom: 80px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: var(--on-primary);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .card {
+            background-color: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--on-surface);
+            opacity: 0.8;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: var(--on-primary);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        button.secondary {
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        button.secondary:hover {
+            background-color: rgba(94, 53, 177, 0.1);
+        }
+
+        .balance {
+            font-size: 1.8rem;
+            font-weight: 600;
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+
+        .positive {
+            color: var(--secondary);
+        }
+
+        .negative {
+            color: var(--error);
+        }
+
+        .transaction-list {
+            list-style: none;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-info {
+            flex: 1;
+        }
+
+        .transaction-person {
+            font-weight: 500;
+            margin-bottom: 0.2rem;
+        }
+
+        .transaction-amount {
+            font-weight: 600;
+        }
+
+        .transaction-date {
+            font-size: 0.8rem;
+            color: #757575;
+        }
+
+        .delete-btn {
+            color: var(--error);
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            margin-left: 1rem;
+            cursor: pointer;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            color: #757575;
+            position: relative;
+        }
+
+        .tab.active {
+            color: var(--primary);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: var(--on-primary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(94, 53, 177, 0.2);
+        }
+
+        .summary-title {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .summary-amount {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-description {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .people-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .person-card {
+            background-color: var(--surface);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .person-name {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .person-balance {
+            font-weight: 600;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: #757575;
+            font-size: 0.9rem;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 56px;
+            height: 56px;
+            background-color: var(--primary);
+            color: var(--on-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 100;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--surface);
+            width: 90%;
+            max-width: 400px;
+            border-radius: 12px;
+            overflow: hidden;
+            animation: modalFadeIn 0.3s;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            background-color: var(--primary);
+            color: var(--on-primary);
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .modal-footer button {
+            width: auto;
+            margin-left: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 0.5rem;
+            }
+            
+            .card {
+                padding: 1rem;
+            }
+            
+            .people-list {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Money Tracker</h1>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" data-tab="summary">Summary</div>
+            <div class="tab" data-tab="transactions">Transactions</div>
+            <div class="tab" data-tab="people">People</div>
+        </div>
+
+        <div class="tab-content active" id="summary">
+            <div class="summary-card">
+                <div class="summary-title">Total Balance</div>
+                <div class="summary-amount" id="total-balance">৳0</div>
+                <div class="summary-description">Net amount across all people</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Quick Actions</div>
+                <button id="add-money-btn" class="secondary">Add Money Received</button>
+                <div style="height: 0.5rem;"></div>
+                <button id="add-expense-btn" class="secondary">Add Expense</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Recent Transactions</div>
+                <ul class="transaction-list" id="recent-transactions">
+                    <!-- Recent transactions will appear here -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="tab-content" id="transactions">
+            <div class="card">
+                <div class="card-title">All Transactions</div>
+                <ul class="transaction-list" id="all-transactions">
+                    <!-- All transactions will appear here -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="tab-content" id="people">
+            <div class="card">
+                <div class="card-title">People</div>
+                <div class="people-list" id="people-list">
+                    <!-- People cards will appear here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fab" id="fab-add">+</div>
+
+    <!-- Add Money Modal -->
+    <div class="modal" id="add-money-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Add Money Received</div>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="money-person">From</label>
+                    <input type="text" id="money-person" placeholder="Person's name">
+                </div>
+                <div class="form-group">
+                    <label for="money-amount">Amount (৳)</label>
+                    <input type="number" id="money-amount" placeholder="Amount received">
+                </div>
+                <div class="form-group">
+                    <label for="money-date">Date</label>
+                    <input type="date" id="money-date">
+                </div>
+                <div class="form-group">
+                    <label for="money-notes">Notes (Optional)</label>
+                    <input type="text" id="money-notes" placeholder="Any additional notes">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="secondary" id="cancel-money-btn">Cancel</button>
+                <button id="save-money-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Expense Modal -->
+    <div class="modal" id="add-expense-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Add Expense</div>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="expense-person">Deduct From</label>
+                    <select id="expense-person">
+                        <option value="">Select person</option>
+                        <!-- People options will be added here -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="expense-amount">Amount (৳)</label>
+                    <input type="number" id="expense-amount" placeholder="Amount spent">
+                </div>
+                <div class="form-group">
+                    <label for="expense-category">Category</label>
+                    <select id="expense-category">
+                        <option value="food">Food</option>
+                        <option value="transport">Transport</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="bills">Bills</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="expense-date">Date</label>
+                    <input type="date" id="expense-date">
+                </div>
+                <div class="form-group">
+                    <label for="expense-notes">Notes (Optional)</label>
+                    <input type="text" id="expense-notes" placeholder="What did you spend on?">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="secondary" id="cancel-expense-btn">Cancel</button>
+                <button id="save-expense-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Created by Sayeed M Mobtasim
+    </div>
+
+    <script>
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set today's date as default in date inputs
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('money-date').value = today;
+            document.getElementById('expense-date').value = today;
+
+            // Initialize data from localStorage
+            initData();
+
+            // Set up event listeners
+            setupEventListeners();
+
+            // Update UI with current data
+            updateUI();
+        });
+
+        // Data structure
+        let appData = {
+            people: [],
+            transactions: []
+        };
+
+        // Initialize data from localStorage
+        function initData() {
+            const savedData = localStorage.getItem('moneyTrackerData');
+            if (savedData) {
+                appData = JSON.parse(savedData);
+            }
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('moneyTrackerData', JSON.stringify(appData));
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    document.getElementById(this.dataset.tab).classList.add('active');
+                });
+            });
+
+            // Add money button
+            document.getElementById('add-money-btn').addEventListener('click', function() {
+                document.getElementById('add-money-modal').style.display = 'flex';
+            });
+
+            // Add expense button
+            document.getElementById('add-expense-btn').addEventListener('click', function() {
+                // Update people dropdown
+                const select = document.getElementById('expense-person');
+                select.innerHTML = '<option value="">Select person</option>';
+                
+                appData.people.forEach(person => {
+                    const option = document.createElement('option');
+                    option.value = person.name;
+                    option.textContent = person.name;
+                    select.appendChild(option);
+                });
+                
+                document.getElementById('add-expense-modal').style.display = 'flex';
+            });
+
+            // FAB button
+            document.getElementById('fab-add').addEventListener('click', function() {
+                // Open add money modal by default, or could implement a menu
+                document.getElementById('add-money-modal').style.display = 'flex';
+            });
+
+            // Cancel money modal
+            document.getElementById('cancel-money-btn').addEventListener('click', function() {
+                document.getElementById('add-money-modal').style.display = 'none';
+                clearMoneyForm();
+            });
+
+            // Save money
+            document.getElementById('save-money-btn').addEventListener('click', function() {
+                addMoneyReceived();
+            });
+
+            // Cancel expense modal
+            document.getElementById('cancel-expense-btn').addEventListener('click', function() {
+                document.getElementById('add-expense-modal').style.display = 'none';
+                clearExpenseForm();
+            });
+
+            // Save expense
+            document.getElementById('save-expense-btn').addEventListener('click', function() {
+                addExpense();
+            });
+        }
+
+        // Add money received
+        function addMoneyReceived() {
+            const personName = document.getElementById('money-person').value.trim();
+            const amount = parseFloat(document.getElementById('money-amount').value);
+            const date = document.getElementById('money-date').value;
+            const notes = document.getElementById('money-notes').value.trim();
+
+            if (!personName || isNaN(amount) || amount <= 0 || !date) {
+                alert('Please fill in all required fields with valid values');
+                return;
+            }
+
+            // Add or update person
+            let person = appData.people.find(p => p.name.toLowerCase() === personName.toLowerCase());
+            if (!person) {
+                person = {
+                    name: personName,
+                    totalReceived: 0,
+                    totalSpent: 0
+                };
+                appData.people.push(person);
+            }
