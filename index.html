@@ -173,7 +173,9 @@
         document.getElementById('money-amount').value = '';
         document.getElementById('money-notes').value = '';
         // Optionally reset date, or leave it as today
-        // document.getElementById('money-date').value = new Date().toISOString().split('T')[0];
+         const today = new Date().toISOString().split('T')[0];
+         const moneyDateInput = document.getElementById('money-date');
+         if (moneyDateInput) moneyDateInput.value = today;
     }
 
      function clearExpenseForm() {
@@ -182,7 +184,9 @@
         document.getElementById('expense-category').value = 'food'; // Reset to default category
         document.getElementById('expense-notes').value = '';
         // Optionally reset date
-        // document.getElementById('expense-date').value = new Date().toISOString().split('T')[0];
+         const today = new Date().toISOString().split('T')[0];
+         const expenseDateInput = document.getElementById('expense-date');
+         if (expenseDateInput) expenseDateInput.value = today;
     }
 
     // --- Core Logic ---
@@ -199,10 +203,20 @@
 
     // Add money received transaction
     function addMoneyReceived() {
-        const personName = document.getElementById('money-person').value.trim();
-        const amount = parseFloat(document.getElementById('money-amount').value);
-        const date = document.getElementById('money-date').value; // Completing the line
-        const notes = document.getElementById('money-notes').value.trim();
+        const personNameInput = document.getElementById('money-person');
+        const amountInput = document.getElementById('money-amount');
+        const dateInput = document.getElementById('money-date');
+        const notesInput = document.getElementById('money-notes');
+
+        if (!personNameInput || !amountInput || !dateInput || !notesInput) {
+             console.error("One or more elements not found in Add Money form");
+             return;
+        }
+
+        const personName = personNameInput.value.trim();
+        const amount = parseFloat(amountInput.value);
+        const date = dateInput.value;
+        const notes = notesInput.value.trim();
 
         if (!personName || isNaN(amount) || amount <= 0 || !date) {
             alert('Please fill in valid person name, positive amount, and date.');
@@ -220,6 +234,8 @@
             date: date,
             notes: notes
         };
+        // Ensure transactions array exists
+        if (!appData.transactions) appData.transactions = [];
         appData.transactions.push(transaction);
 
         saveData();
@@ -230,11 +246,23 @@
 
     // Add expense transaction
     function addExpense() {
-        const personName = document.getElementById('expense-person').value;
-        const amount = parseFloat(document.getElementById('expense-amount').value);
-        const category = document.getElementById('expense-category').value;
-        const date = document.getElementById('expense-date').value;
-        const notes = document.getElementById('expense-notes').value.trim();
+        const personSelect = document.getElementById('expense-person');
+        const amountInput = document.getElementById('expense-amount');
+        const categorySelect = document.getElementById('expense-category');
+        const dateInput = document.getElementById('expense-date');
+        const notesInput = document.getElementById('expense-notes');
+
+         if (!personSelect || !amountInput || !categorySelect || !dateInput || !notesInput) {
+             console.error("One or more elements not found in Add Expense form");
+             return;
+         }
+
+
+        const personName = personSelect.value;
+        const amount = parseFloat(amountInput.value);
+        const category = categorySelect.value;
+        const date = dateInput.value;
+        const notes = notesInput.value.trim();
 
         if (!personName || isNaN(amount) || amount <= 0 || !date) {
             alert('Please select a person and enter a valid positive amount and date.');
@@ -257,6 +285,8 @@
             date: date,
             notes: notes
         };
+         // Ensure transactions array exists
+        if (!appData.transactions) appData.transactions = [];
         appData.transactions.push(transaction);
 
         saveData();
@@ -267,11 +297,18 @@
 
     // Delete a transaction
     function deleteTransaction(id) {
+        // Ensure transactions array exists
+        if (!appData.transactions) appData.transactions = [];
+
         const transactionIndex = appData.transactions.findIndex(t => t.id === id);
         if (transactionIndex === -1) return;
 
         const transaction = appData.transactions[transactionIndex];
+
+         // Ensure people array exists
+        if (!appData.people) appData.people = [];
         const person = appData.people.find(p => p.name === transaction.person);
+
 
         if (person) {
             // Reverse the balance change
@@ -291,21 +328,37 @@
 
     // Update the UI (render lists, balances etc.)
     function updateUI() {
+        // Ensure main data structure exists
+        if (!appData) appData = { people: [], transactions: [] };
+        if (!appData.people) appData.people = [];
+        if (!appData.transactions) appData.transactions = [];
+
         console.log("Updating UI with data:", appData); // For debugging
 
         // Sort transactions by date (newest first)
-        appData.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Add safety check for date validity before sorting
+        appData.transactions.sort((a, b) => {
+             const dateA = new Date(a.date);
+             const dateB = new Date(b.date);
+             // Handle invalid dates if necessary, e.g., push them to the end
+             if (isNaN(dateA)) return 1;
+             if (isNaN(dateB)) return -1;
+             return dateB - dateA; // Newest first
+        });
+
 
         // Update Total Balance
         const totalBalanceElement = document.getElementById('total-balance');
-        const totalBalance = appData.people.reduce((sum, p) => sum + p.balance, 0);
+        // Ensure people array exists before reducing
+        const totalBalance = appData.people ? appData.people.reduce((sum, p) => sum + (p.balance || 0), 0) : 0;
+
         if (totalBalanceElement) {
             totalBalanceElement.textContent = `৳${totalBalance.toFixed(2)}`;
             totalBalanceElement.className = 'summary-amount'; // Reset class
             if (totalBalance > 0) totalBalanceElement.classList.add('positive');
             if (totalBalance < 0) totalBalanceElement.classList.add('negative');
         } else {
-             console.error("Element with ID 'total-balance' not found!"); // Added error log
+             console.error("Element with ID 'total-balance' not found!");
         }
 
 
@@ -314,8 +367,11 @@
         renderPeopleList('people-list'); // Full list on people tab
 
         // Render Transaction Lists
-        renderTransactionList('recent-transactions', appData.transactions.slice(0, 5)); // Show recent 5 on summary
-        renderTransactionList('all-transactions', appData.transactions); // Show all on transactions tab
+        const recentTransactions = appData.transactions ? appData.transactions.slice(0, 5) : [];
+        const allTransactionsData = appData.transactions ? appData.transactions : [];
+        renderTransactionList('recent-transactions', recentTransactions); // Show recent 5 on summary
+        renderTransactionList('all-transactions', allTransactionsData); // Show all on transactions tab
+
 
         // Update expense person dropdown (in case people were added/removed indirectly)
         updateExpensePersonDropdown();
@@ -324,21 +380,25 @@
     // Helper to update expense person dropdown options
     function updateExpensePersonDropdown() {
         const select = document.getElementById('expense-person');
-         if (!select) return; // Silently return if dropdown not found (e.g., element removed)
+         if (!select) return;
 
         // Remember the currently selected value if any
         const selectedValue = select.value;
 
         select.innerHTML = '<option value="">Select person</option>'; // Clear existing options
-        appData.people.forEach(person => {
-            const option = document.createElement('option');
-            option.value = person.name;
-            option.textContent = person.name;
-            select.appendChild(option);
-        });
+        // Ensure people array exists
+        if (appData.people) {
+             appData.people.forEach(person => {
+                const option = document.createElement('option');
+                option.value = person.name;
+                option.textContent = person.name;
+                select.appendChild(option);
+            });
+        }
+
 
         // Restore selection if possible
-        if (appData.people.some(p => p.name === selectedValue)) {
+         if (appData.people && appData.people.some(p => p.name === selectedValue)) {
             select.value = selectedValue;
         }
     }
@@ -348,21 +408,29 @@
     function renderPeopleList(listId) {
         const listElement = document.getElementById(listId);
         if (!listElement) {
-             console.error(`Element with ID '${listId}' not found!`); // Added error log
+             console.error(`Element with ID '${listId}' not found!`);
              return;
         }
 
 
         listElement.innerHTML = ''; // Clear previous list
+        // Ensure people array exists
+        if (!appData.people || appData.people.length === 0) {
 
-        if (appData.people.length === 0) {
             listElement.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 1rem; color: #757575;">No people added yet</div>`;
             return;
         }
 
+
         appData.people.forEach(person => {
+             // Ensure person object has expected properties
+            if (!person || typeof person.name === 'undefined' || typeof person.balance === 'undefined') {
+                console.warn("Skipping rendering invalid person data:", person);
+                return; // Skip this person
+            }
+
             const personDiv = document.createElement('div');
-            personDiv.className = 'person-card'; // Assuming you want card style from CSS
+            personDiv.className = 'person-card';
 
             const nameEl = document.createElement('div');
             nameEl.className = 'person-name';
@@ -384,19 +452,28 @@
     function renderTransactionList(listId, transactions) {
         const listElement = document.getElementById(listId);
          if (!listElement) {
-             console.error(`Element with ID '${listId}' not found!`); // Added error log
+             console.error(`Element with ID '${listId}' not found!`);
              return;
          }
 
 
         listElement.innerHTML = ''; // Clear previous list
 
-        if (transactions.length === 0) {
+         // Ensure transactions array exists
+        if (!transactions || transactions.length === 0) {
+
             listElement.innerHTML = `<li style="text-align: center; padding: 1rem; color: #757575;">No transactions yet</li>`;
             return;
         }
 
+
         transactions.forEach(t => {
+            // Ensure transaction object has expected properties
+             if (!t || typeof t.person === 'undefined' || typeof t.type === 'undefined' || typeof t.amount === 'undefined' || typeof t.date === 'undefined' || typeof t.id === 'undefined') {
+                 console.warn("Skipping rendering invalid transaction data:", t);
+                 return; // Skip this transaction
+             }
+
             const li = document.createElement('li');
             li.className = 'transaction-item';
 
@@ -411,7 +488,14 @@
             dateEl.className = 'transaction-date';
             // Add check for valid date before formatting
             try {
-                dateEl.textContent = new Date(t.date).toLocaleDateString('en-GB'); // dd/mm/yyyy format
+                 // Check if date is potentially just 'YYYY-MM-DD' which needs time for proper Date object in some cases
+                 let dateObj = new Date(t.date);
+                 if (t.date && t.date.length === 10 && !t.date.includes('T')) {
+                     dateObj = new Date(t.date + 'T00:00:00'); // Assume start of day if only date part is present
+                 }
+                 if (isNaN(dateObj)) throw new Error("Invalid date object");
+                 dateEl.textContent = dateObj.toLocaleDateString('en-GB'); // dd/mm/yyyy format
+
             } catch (e) {
                  console.error("Error formatting date:", t.date, e);
                  dateEl.textContent = "Invalid Date";
